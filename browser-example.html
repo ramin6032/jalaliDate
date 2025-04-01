@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JalaliDate.js Browser Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .result {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+      h1 {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JalaliDate.js Browser Example</h1>
+
+    <div id="results"></div>
+
+    <!-- Load the JalaliDate library (when published) -->
+    <!-- <script src="https://unpkg.com/jalali-date-js@1.0.0/dist/jalali-date.js"></script> -->
+
+    <!-- For local development, use your local file -->
+    <script src="./src/jalali-date.js"></script>
+
+    <script>
+      // Function to add a result to the page
+      function addResult(text) {
+        const results = document.getElementById("results");
+        const div = document.createElement("div");
+        div.className = "result";
+        div.textContent = text;
+        results.appendChild(div);
+      }
+
+      // Create a Jalali date from the current Gregorian date
+      const today = JalaliDate.now();
+      addResult(`Today in Jalali: ${today.format()}`);
+      addResult(`Month name: ${today.getMonthName()}`);
+      addResult(`Day name: ${today.getDayName()}`);
+
+      // Convert a specific Gregorian date to Jalali
+      const birthdate = new JalaliDate(new Date(1990, 5, 15)); // June 15, 1990
+      addResult(`June 15, 1990 in Jalali: ${birthdate.format("YYYY/MM/DD")}`);
+
+      // Create a Jalali date directly
+      const specificDate = new JalaliDate(1402, 1, 14);
+      addResult(`Specific Jalali date (1402/1/14): ${specificDate.format()}`);
+
+      // Convert to Gregorian
+      const gregorianDate = specificDate.toDate();
+      addResult(
+        `1402/1/14 in Gregorian: ${gregorianDate.toISOString().split("T")[0]}`
+      );
+
+      // Using the static conversion method
+      const jalaliObj = JalaliDate.toJalali(new Date(2023, 0, 1)); // January 1, 2023
+      addResult(
+        `January 1, 2023 in Jalali: ${jalaliObj.year}/${jalaliObj.month}/${jalaliObj.day}`
+      );
+    </script>
+  </body>
+</html>

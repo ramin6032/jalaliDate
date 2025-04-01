@@ -1,0 +1,32 @@
+{
+  "name": "jalali-date-js",
+  "version": "1.0.0",
+  "description": "A dependency-free Jalali (Persian) date library for JavaScript",
+  "main": "dist/jalali-date.js",
+  "module": "dist/jalali-date.mjs",
+  "types": "dist/jalali-date.d.ts",
+  "scripts": {
+    "build": "npm run build:cjs & npm run build:esm & npm run build:types",
+    "build:cjs": "mkdir dist & copy src\\jalali.js dist\\jalali.js",
+    "build:esm": "mkdir dist & copy src\\jalali.js dist\\jalali.mjs",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "test": "echo \"Error: no test specified\" & exit 1"
+  },
+  "keywords": [
+    "jalali",
+    "persian",
+    "shamsi",
+    "date",
+    "calendar"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/jalali-date-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/jalali-date-js/issues"
+  },
+  "homepage": "https://github.com/yourusername/jalali-date-js#readme"
+}
