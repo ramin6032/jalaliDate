@@ -1,14 +1,16 @@
 class Jalali {
-  constructor(gy, gm, gd, time, format) {
-    // if (!(gregorianDate instanceof Date) || isNaN(gregorianDate)) {
-    //   throw new Error("Invalid Gregorian Date provided.");
-    // }
+  constructor(gy, gm, gd, time = "00:00:00", format = "YYYY/MM/DD") {
+    if (arguments.length === 1 && !(arguments[0] instanceof Date)) {
+      throw new Error("Invalid Gregorian Date provided.");
+    }
 
     if (arguments.length === 1 && arguments[0] instanceof Date) {
       const gregorianDate = gy;
       const gregorianYear = gregorianDate.getFullYear();
       const gregorianMonth = gregorianDate.getMonth() + 1; // ماه در جاوااسکریپت از 0 شروع می‌شود
       const gregorianDay = gregorianDate.getDate();
+      const dayOfWeekNumber = gregorianDate.getDay();
+      const timestamp = gregorianDate.getTime();
 
       const [hoursParam, minutesParam, secondsParam] = time
         ? time.split(":")
@@ -33,12 +35,22 @@ class Jalali {
       this.year = jalaliDate[0];
       this.month = jalaliDate[1];
       this.day = jalaliDate[2];
+      this.dayOfWeekNumber = dayOfWeekNumber + 1;
+      this.dayName = Jalali.getDayName(this.dayOfWeekNumber);
+      this.monthName = Jalali.getMonthName(this.month);
       this.isKabise = Jalali.isKabise(this.year);
       this.isJalaliLeap = Jalali.isJalaliLeap(this.year);
       this.formatDate = this.#validateFormat(format) ? format : "YYYY/MM/DD";
       this.date = this.#DateToString();
       this.time = `${hours}:${minutes}:${seconds}`;
+      this.timestamp = timestamp;
       this.#setDateTime(this.date, this.time);
+      this.daysInMonth = Jalali.getDaysInMonth(this.year, this.month);
+      this.daysInYear = Jalali.getDaysInMonth(this.year);
+      this.season = Jalali.getSeason(this.month);
+      this.longDate = `${this.dayName}, ${this.day} ${this.monthName} ${this.year}`;
+      this.dayOfYear = this.getDayOfYear();
+      this.weekOfYear = this.getWeekOfYear();
     } else if (arguments.length === 3) {
       return new Jalali(new Date(gy, gm - 1, gd));
     } else {
@@ -73,23 +85,9 @@ class Jalali {
     return this.day;
   }
 
-  //   /**
-  //    * Format the date as a string
-  //    * @param {string} format - Optional format string (default: 'YYYY/MM/DD')
-  //    * @returns {string} formatted date
-  //    */
-  //   format(format = "YYYY/MM/DD") {
-  //     const y = this.year.toString();
-  //     const m = this.month < 10 ? `0${this.month}` : this.month.toString();
-  //     const d = this.day < 10 ? `0${this.day}` : this.day.toString();
-
-  //     let result = format;
-  //     result = result.replace("YYYY", y);
-  //     result = result.replace("MM", m);
-  //     result = result.replace("DD", d);
-
-  //     return result;
-  //   }
+  getDayOfWeek() {
+    return this.dayOfWeekNumber;
+  }
 
   static toJalali(gy, gm, gd) {
     const g_d_m = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -153,10 +151,6 @@ class Jalali {
     return [jy, jm + 1, jd];
   }
 
-  //   static isGregorianLeap(gy = new Jalali().year) {
-  //     return (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0;
-  //   }
-
   static isJalaliLeap(jy = new Jalali().year) {
     const remainder = jy % 33;
     return (
@@ -217,6 +211,138 @@ class Jalali {
           return match;
       }
     });
+  }
+
+  static getDaysInMonth(year, month) {
+    if (month < 1 || month > 12) {
+      throw new Error("Month must be between 1 and 12");
+    }
+
+    // First 6 months have 31 days
+    if (month <= 6) return 31;
+
+    // Months 7-11 have 30 days
+    if (month < 12) return 30;
+
+    // Last month (12) has 29 days in normal years and 30 days in leap years
+    return Jalali.isJalaliLeap(year) ? 30 : 29;
+  }
+
+  // Instance method to get days in current month
+  getDaysInMonth() {
+    return Jalali.getDaysInMonth(this.year, this.month);
+  }
+
+  /**
+   * Get total days in a Jalali year
+   * @param {number} [year] - Jalali year (optional, defaults to current instance year)
+   * @returns {number} - Total days in the year (365 or 366)
+   */
+  static getDaysInYear(year) {
+    return Jalali.isJalaliLeap(year) ? 366 : 365;
+  }
+
+  /**
+   * Get total days in the current Jalali year
+   * @returns {number} - Total days in the current year (365 or 366)
+   */
+  getDaysInYear() {
+    return Jalali.getDaysInYear(this.year);
+  }
+
+  static getDayName(dayOfWeekNumber) {
+    if (dayOfWeekNumber === null || dayOfWeekNumber === undefined) {
+      throw new Error("dayOfWeekNumber param is invalid");
+    }
+    const days = [
+      "شنبه",
+      "یکشنبه",
+      "دوشنبه",
+      "سه‌شنبه",
+      "چهارشنبه",
+      "پنج‌شنبه",
+      "جمعه",
+    ];
+    return days[parseInt(dayOfWeekNumber)];
+  }
+
+  getDayName() {
+    return Jalali.getDayName(this.dayOfWeekNumber);
+  }
+
+  static getMonthName(dayOfMonth) {
+    if (dayOfMonth === null || dayOfMonth === undefined) {
+      throw new Error("dayOfMonth param is invalid");
+    }
+    const month = [
+      "فروردین",
+      "اردیبهشت",
+      "خرداد",
+      "تیر",
+      "مرداد",
+      "شهریور",
+      "مهر",
+      "آبان",
+      "آذر",
+      "دی",
+      "بهمن",
+      "اسفند",
+    ];
+    return month[parseInt(dayOfMonth) - 1];
+  }
+  getMonthName() {
+    return Jalali.getMonthName(this.month);
+  }
+
+  static getSeason(month) {
+    if (month === null || month === undefined) {
+      throw new Error("getSeason param is invalid");
+    }
+    const monthNumber = parseInt(month);
+    if (monthNumber >= 1 && monthNumber <= 3) return "بهار";
+    if (monthNumber >= 4 && monthNumber <= 6) return "تابستان";
+    if (monthNumber >= 7 && monthNumber <= 9) return "پائیز";
+    if (monthNumber >= 10 && monthNumber <= 12) return "زمستان";
+  }
+  getSeason() {
+    return getSeason(this.month);
+  }
+
+  getDayOfYear() {
+    const daysInMonths = [
+      31,
+      31,
+      31,
+      31,
+      31,
+      31,
+      30,
+      30,
+      30,
+      30,
+      30,
+      this.isJalaliLeap ? 30 : 29,
+    ];
+    return (
+      daysInMonths
+        .slice(0, this.month - 1)
+        .reduce((sum, days) => sum + days, 0) + this.day
+    );
+  }
+
+  getWeekOfYear() {
+    const dayOfYear = this.getDayOfYear();
+    return Math.ceil(dayOfYear / 7);
+  }
+
+  //is today,tomarow,yesterday,add day,mines day,date diff,
+  static isToday() {
+    const today = new Jalali(new Date()); // Convert current Gregorian date to Jalali
+    return (
+      this.year === today.year &&
+      this.month === today.month &&
+      this.day === today.day
+    );
   }
 }
 
