@@ -1,4 +1,8 @@
 class Jalali {
+  #gregorianDate;
+  #gy;
+  #gm;
+  #gd;
   constructor(gy, gm, gd, time = "00:00:00", format = "YYYY/MM/DD") {
     if (arguments.length === 1 && !(arguments[0] instanceof Date)) {
       throw new Error("Invalid Gregorian Date provided.");
@@ -32,9 +36,13 @@ class Jalali {
         gregorianDay
       );
 
-      this.year = jalaliDate[0];
-      this.month = jalaliDate[1];
-      this.day = jalaliDate[2];
+      this.#gregorianDate = gregorianDate;
+      this.#gy = gregorianYear;
+      this.#gm = gregorianMonth;
+      this.#gd = gregorianDay;
+      this.year = jalaliDate.jy;
+      this.month = jalaliDate.jm;
+      this.day = jalaliDate.jd;
       this.dayOfWeekNumber = dayOfWeekNumber + 1;
       this.dayName = Jalali.getDayName(this.dayOfWeekNumber);
       this.monthName = Jalali.getMonthName(this.month);
@@ -148,7 +156,93 @@ class Jalali {
 
     let jd = j_day_no + 1;
 
-    return [jy, jm + 1, jd];
+    return { jy, jm: jm + 1, jd };
+  }
+
+  static toGregorian(jy, jm, jd) {
+    // Check if the Jalali year is a leap year
+    const jalaliLeap = (jy - (jy > 0 ? 474 : 473)) % 2820;
+    const isLeap =
+      jalaliLeap === 2820 - 1 || jalaliLeap % 4 === (jy > 474 ? 0 : 3);
+
+    // Days in each Jalali month
+    const jalaliDaysInMonth = [
+      31,
+      isLeap ? 30 : 29,
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31,
+    ];
+
+    // Validate day based on month
+    if (jd > jalaliDaysInMonth[jm - 1]) {
+      throw new Error("Invalid day for Jalali month");
+    }
+
+    // Calculate day number in Jalali year (1-based)
+    let dayOfYear = jd;
+    for (let i = 0; i < jm - 1; i++) {
+      dayOfYear += jalaliDaysInMonth[i];
+    }
+
+    // Calculate equivalent Gregorian date (March 21 + dayOfYear - 1)
+    // March 21 is day 80 in a non-leap year, 81 in a leap year
+    const gregYear = jy + 621;
+    const isGregLeap =
+      (gregYear % 4 === 0 && gregYear % 100 !== 0) || gregYear % 400 === 0;
+    const march21DayOfYear = isGregLeap ? 81 : 80;
+
+    let gregDayOfYear = march21DayOfYear + dayOfYear - 1;
+
+    // Handle year overflow
+    const daysInGregYear = isGregLeap ? 366 : 365;
+    if (gregDayOfYear > daysInGregYear) {
+      gregDayOfYear -= daysInGregYear;
+      return dayToGregorian(gregYear + 1, gregDayOfYear);
+    } else if (gregDayOfYear < 1) {
+      return dayToGregorian(
+        gregYear - 1,
+        gregDayOfYear + (isGregLeap ? 366 : 365)
+      );
+    } else {
+      return dayToGregorian(gregYear, gregDayOfYear);
+    }
+    function dayToGregorian(year, dayOfYear) {
+      const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+      const daysInMonth = [
+        31,
+        isLeap ? 29 : 28,
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+      ];
+
+      let month = 0;
+      let day = dayOfYear;
+      for (let i = 0; i < daysInMonth.length; i++) {
+        if (day <= daysInMonth[i]) {
+          month = i + 1;
+          break;
+        }
+        day -= daysInMonth[i];
+      }
+
+      return { gy: year, gm: month, gd: day };
+    }
   }
 
   static isJalaliLeap(jy = new Jalali().year) {
@@ -336,13 +430,99 @@ class Jalali {
   }
 
   //is today,tomarow,yesterday,add day,mines day,date diff,
-  static isToday() {
-    const today = new Jalali(new Date()); // Convert current Gregorian date to Jalali
+  static isToday(jy, jm, jd) {
+    if (jy < 0 || jm < 0 || jm > 12 || jd < 0 || jd > 31) {
+      throw new Error("isToday params is invalid");
+    }
+    const today = new Jalali(new Date());
     return (
-      this.year === today.year &&
-      this.month === today.month &&
-      this.day === today.day
+      today.year === parseInt(jy) &&
+      today.month === parseInt(jm) &&
+      today.day === parseInt(jd)
     );
+  }
+  isToday() {
+    return Jalali.isToday(this.year, this.month, this.day);
+  }
+
+  static addDays(jyear, jmonth, jday, days) {
+    if (jyear < 0 || jmonth < 0 || jmonth > 12 || jday < 0 || jday > 31) {
+      throw new Error("addDays params is invalid");
+    }
+    const { gy, gm, gd } = Jalali.toGregorian(jyear, jmonth, jday);
+    const { jy, jm, jd } = Jalali.toJalali(gy, gm, gd + days);
+    return { jy, jm, jd, jalaliDate: `${jy}/${jm}/${jd}` };
+  }
+
+  addDays(days) {
+    return Jalali.addDays(this.year, this.month, this.day, days);
+  }
+
+  static removeDays(jyear, jmonth, jday, days) {
+    if (
+      jyear < 0 ||
+      jmonth < 0 ||
+      jmonth > 12 ||
+      jday < 0 ||
+      jday > 31 ||
+      days < 0
+    ) {
+      throw new Error("addDays params is invalid");
+    }
+    const { gy, gm, gd } = Jalali.toGregorian(jyear, jmonth, jday);
+    const { jy, jm, jd } = Jalali.toJalali(gy, gm, gd + days);
+    return { jy, jm, jd, jalaliDate: `${jy}/${jm}/${jd}` };
+  }
+
+  removeDays(days) {
+    return Jalali.addDays(this.year, this.month, this.day, days);
+  }
+
+  static addMonths(jyear, jmonth, jday, months) {
+    if (jyear < 0 || jmonth < 0 || jmonth > 12 || jday < 0 || jday > 31) {
+      throw new Error("addMonths params is invalid");
+    }
+    let jy;
+    let jm;
+    let jd;
+    if (jmonth + months > 12) {
+      jy = jyear + Math.floor((jmonth + months) / 12);
+      jm = Math.floor((jmonth + months) % 12);
+      jd = jday;
+    } else {
+      jy = jyear;
+      jm = jmonth + months;
+      jd = jday;
+    }
+
+    if (jm > 6 && jm < 12 && jd > 30) {
+      jm += 1;
+      jd = 1;
+    }
+
+    if (jm === 12 && jd === 30 && !Jalali.isJalaliLeap(jy)) {
+      jm = 1;
+      jd = 1;
+      jy += 1;
+    }
+
+    if (jm === 12 && jd === 31 && !Jalali.isJalaliLeap(jy)) {
+      jm = 1;
+      jd = 2;
+      jy += 1;
+    }
+
+    if (jm === 12 && jd === 31 && Jalali.isJalaliLeap(jy)) {
+      jm = 1;
+      jd = 1;
+      jy += 1;
+    }
+
+    return { jy, jm, jd, jalaliDate: `${jy}/${jm}/${jd}` };
+  }
+
+  addMonths(months) {
+    return Jalali.addMonths(this.year, this.month, this.day, months);
   }
 }
 

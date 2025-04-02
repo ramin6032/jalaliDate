@@ -37,16 +37,14 @@
 //       (jalaliTarget.day < 10 ? "0" + jalaliTarget.day : jalaliTarget.day)
 //   )
 // );
-const JalaliDate = require("./src/jalali.js");
+import Jalali from "./src/jalali.js";
 
 // نمونه استفاده:
-const todayGregorian = new Date();
+const todayGregorian = new Date(2025, 3, 2);
 
-const todayJalali = new JalaliDate(todayGregorian);
+const todayJalali = new Jalali(todayGregorian);
 console.log(
-  todayJalali.getYear(),
-  todayJalali.getMonth(),
-  todayJalali.getDay(),
   todayJalali.date,
-  todayJalali
+  todayJalali.addMonths(1),
+  Jalali.addMonths(1404, 1, 13, 1)
 );
