@@ -1,99 +1,168 @@
-# JalaliDate.js
+# Modern Persian Jalali Date Picker
 
-A lightweight, dependency-free JavaScript library for working with Jalali (Persian/Shamsi) calendar.
+یک کتابخانه مدرن برای کار با تاریخ شمسی (جلالی) با قابلیت تبدیل تاریخ، فرمت‌بندی، محاسبات تقویمی و پشتیبانی از TypeScript.
 
-## Installation
+## نصب
+
+### npm
 
 ```bash
-npm install jalali-date-js
+npm install modern-persian-jalali-date-picker
 ```
 
-## Usage
+### yarn
 
-### Import the library
+```bash
+yarn add modern-persian-jalali-date-picker
+```
+
+### CDN
+
+```html
+<script src="https://unpkg.com/modern-persian-jalali-date-picker/dist/jalali.min.js"></script>
+```
+
+## استفاده
+
+### JavaScript
 
 ```javascript
-// CommonJS
-const JalaliDate = require("jalali-date-js");
-
-// ES Modules
-import JalaliDate from "jalali-date-js";
+const jalali = new Jalali(1402, 12, 29);
+console.log(jalali.format("YYYY/MM/DD")); // 1402/12/29
+console.log(jalali.toWords()); // بیست و نهم اسفند هزار و چهارصد و دو
 ```
 
-### Create a Jalali date
+### Node.js
 
 ```javascript
-// From the current date
-const today = JalaliDate.now();
-console.log(today.format()); // e.g., "1402/10/15"
-
-// From a specific Gregorian date
-const birthday = new JalaliDate(new Date(1990, 5, 15)); // June 15, 1990
-console.log(birthday.format()); // e.g., "1369/03/25"
-
-// From Jalali year, month, and day
-const specific = new JalaliDate(1401, 7, 16);
-console.log(specific.format()); // "1401/07/16"
+const Jalali = require("modern-persian-jalali-date-picker");
+const jalali = new Jalali(1402, 12, 29);
+console.log(jalali.format("YYYY/MM/DD")); // 1402/12/29
 ```
 
-### Format dates
+### ES Modules
 
 ```javascript
-const date = JalaliDate.now();
-
-// Default format (YYYY/MM/DD)
-console.log(date.format()); // e.g., "1402/10/15"
-
-// Custom format
-console.log(date.format("YYYY-MM-DD")); // e.g., "1402-10-15"
-console.log(date.format("YY/M/D")); // e.g., "02/10/15"
+import Jalali from "modern-persian-jalali-date-picker";
+const jalali = new Jalali(1402, 12, 29);
+console.log(jalali.format("YYYY/MM/DD")); // 1402/12/29
 ```
 
-### Get Persian month and day names
+### React
 
-```javascript
-const date = JalaliDate.now();
+```jsx
+import Jalali from "modern-persian-jalali-date-picker";
 
-// Get Persian month name
-console.log(date.getMonthName()); // e.g., "دی"
-
-// Get Persian day name
-console.log(date.getDayName()); // e.g., "دوشنبه"
+function App() {
+  const jalali = new Jalali(1402, 12, 29);
+  return (
+    <div>
+      <p>{jalali.format("YYYY/MM/DD")}</p>
+      <p>{jalali.toWords()}</p>
+    </div>
+  );
+}
 ```
 
-### Convert between Jalali and Gregorian
+### TypeScript
 
-```javascript
-// Convert Gregorian date to Jalali
-const jalaliDate = JalaliDate.toJalali(new Date(2023, 0, 1));
-console.log(jalaliDate); // { year: 1401, month: 10, day: 11 }
+```typescript
+import Jalali from "modern-persian-jalali-date-picker";
 
-// Convert Jalali date to Gregorian Date object
-const jalali = new JalaliDate(1401, 10, 11);
-const gregorian = jalali.toDate();
-console.log(gregorian); // 2023-01-01T00:00:00.000Z
+const jalali = new Jalali(1402, 12, 29);
+console.log(jalali.format("YYYY/MM/DD")); // 1402/12/29
+console.log(jalali.toWords()); // بیست و نهم اسفند هزار و چهارصد و دو
+
+// استفاده از interface‌ها
+const date: JalaliDate = { year: 1402, month: 12, day: 29 };
+const weekInfo: WeekInfo = jalali.getWeekInfo();
+const monthInfo: MonthInfo = jalali.getMonthInfo();
 ```
 
-## API Reference
+## API
 
-### Constructor
+### تبدیل تاریخ
 
-- `new JalaliDate(year, month, day)` - Create a new Jalali date with the given year, month (1-12), and day
-- `new JalaliDate(date)` - Create a new Jalali date from a JavaScript Date object
+- `fromGregorian(year: number, month: number, day: number): Jalali`
+- `toGregorian(): { year: number; month: number; day: number }`
+- `toDate(): Date`
 
-### Static Methods
+### فرمت‌بندی
 
-- `JalaliDate.toJalali(date)` - Convert a JavaScript Date to a Jalali date object
-- `JalaliDate.now()` - Get the current date as a JalaliDate
+- `format(format: string): string`
+- `getFormattedDate(): FormattedDate`
+- `toWords(): string`
+- `toString(): string`
 
-### Instance Methods
+### اطلاعات هفته
 
-- `format(formatString)` - Format the date according to the format string
-- `toDate()` - Convert to a JavaScript Date object
-- `getMonthName()` - Get the Persian name of the month
-- `getDayOfWeek()` - Get the day of week (0-6, where 0 is Saturday)
-- `getDayName()` - Get the Persian name of the day of week
+- `getWeekInfo(): WeekInfo`
+- `getWorkingDays(endDate: Jalali): number`
 
-## License
+### اطلاعات ماه
+
+- `getMonthInfo(): MonthInfo`
+- `getDaysInMonth(): number`
+- `getDaysUntilEndOfMonth(): number`
+
+### اطلاعات فصل
+
+- `getSeason(): string`
+- `getDaysUntilEndOfSeason(): number`
+
+### دریافت و تنظیم
+
+- `getYear(): number`
+- `getMonth(): number`
+- `getDay(): number`
+- `setYear(year: number): Jalali`
+- `setMonth(month: number): Jalali`
+- `setDay(day: number): Jalali`
+
+## TypeScript
+
+این کتابخانه با TypeScript نوشته شده و شامل تعریف‌های نوع (type definitions) است. interface‌های اصلی:
+
+```typescript
+interface JalaliDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+interface WeekInfo {
+  weekNumber: number;
+  startDate: JalaliDate;
+  endDate: JalaliDate;
+  days: Array<{
+    date: JalaliDate;
+    dayOfWeek: number;
+    dayName: string;
+    isToday: boolean;
+    isWeekend: boolean;
+  }>;
+}
+
+interface MonthInfo {
+  monthNumber: number;
+  monthName: string;
+  daysInMonth: number;
+  firstDay: JalaliDate;
+  lastDay: JalaliDate;
+  weeks: WeekInfo[];
+  season: string;
+}
+
+interface FormattedDate {
+  short: string;
+  medium: string;
+  long: string;
+  full: string;
+  persian: string;
+  words: string;
+}
+```
+
+## مجوز
 
 MIT
